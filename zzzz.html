@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>信息中心 · 学术共研会</title>
+<link rel="icon" href="https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/VaiZbSbpDoc28axjN0IcEPnCn4c">
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+<style>
+:root{
+  --ink-900:#101D33;
+  --ink-800:#16263F;
+  --blue-600:#2C5DA0;
+  --blue-500:#3A6FB8;
+  --blue-300:#8FB0DA;
+  --ice-100:#F2F6FC;
+  --paper:#FFFFFF;
+  --text-strong:#16263F;
+  --text-body:#3E4E66;
+  --text-sub:#67788F;
+  --line:rgba(22,38,63,.12);
+  --serif:"Noto Serif SC",serif,"Songti SC","SimSun";
+  --sans:"Noto Sans SC",-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+  --nav-h:72px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);color:var(--text-body);background:var(--paper);line-height:1.75;-webkit-font-smoothing:antialiased}
+::selection{background:var(--blue-600);color:#fff}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+a:focus-visible{outline:2px solid var(--blue-500);outline-offset:3px;border-radius:2px}
+
+/* ============ 顶部导航 ============ */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;height:var(--nav-h);background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);transition:box-shadow .3s ease}
+.nav.scrolled{box-shadow:0 6px 24px rgba(16,29,51,.08)}
+.nav-inner{max-width:1200px;margin:0 auto;height:100%;padding:0 32px;display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:14px;min-width:0}
+.brand img{height:38px;width:auto}
+.brand-name{font-family:var(--serif);font-weight:700;font-size:19px;color:var(--text-strong);letter-spacing:.06em;white-space:nowrap}
+.brand-en{font-size:11px;letter-spacing:.22em;color:var(--text-sub);text-transform:uppercase;white-space:nowrap}
+.nav-back{font-size:14px;color:var(--text-body);letter-spacing:.08em;display:inline-flex;align-items:center;gap:8px;transition:color .25s ease}
+.nav-back:hover{color:var(--blue-600)}
+.nav-back .arrow{display:inline-block;transition:transform .25s ease}
+.nav-back:hover .arrow{transform:translateX(-4px)}
+
+/* ============ Hero ============ */
+.hero{position:relative;padding:calc(var(--nav-h) + 84px) 24px 96px;background:var(--ink-900);overflow:hidden;text-align:center}
+.hero::before{content:"∑";position:absolute;right:-2%;top:6%;font-family:var(--serif);font-size:min(42vw,480px);line-height:1;color:rgba(255,255,255,.035);user-select:none;pointer-events:none}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:72px 72px;mask-image:radial-gradient(ellipse 90% 90% at 50% 40%,#000 30%,transparent 75%);-webkit-mask-image:radial-gradient(ellipse 90% 90% at 50% 40%,#000 30%,transparent 75%);pointer-events:none}
+.hero-inner{position:relative;z-index:2;max-width:960px;margin:0 auto}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:16px;font-size:13px;letter-spacing:.42em;text-transform:uppercase;color:var(--blue-300);font-weight:500;margin-bottom:26px}
+.hero-eyebrow::before,.hero-eyebrow::after{content:"";width:44px;height:1px;background:var(--line-light, rgba(255,255,255,.18))}
+.hero h1{font-family:var(--serif);font-weight:900;color:#fff;font-size:clamp(36px,6vw,60px);letter-spacing:.16em;line-height:1.3;text-indent:.16em}
+.hero p{margin-top:18px;color:rgba(255,255,255,.66);font-size:clamp(14px,1.8vw,17px);letter-spacing:.16em;font-weight:300}
+
+/* ============ 通用区块 ============ */
+.section{padding:96px 24px}
+.section-inner{max-width:1080px;margin:0 auto}
+.sec-head{text-align:center;margin-bottom:60px}
+.sec-tag{display:inline-block;font-size:12px;letter-spacing:.34em;color:var(--blue-600);text-transform:uppercase;margin-bottom:16px;font-weight:500}
+.sec-title{font-family:var(--serif);font-weight:700;color:var(--text-strong);font-size:clamp(26px,3.6vw,36px);letter-spacing:.12em}
+.sec-title::after{content:"";display:block;width:44px;height:2px;background:var(--blue-500);margin:20px auto 0}
+.sec-desc{margin-top:18px;color:var(--text-sub);font-size:15px;max-width:600px;margin-left:auto;margin-right:auto}
+
+/* ============ 学科按钮 ============ */
+.subjects-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+.subject-card{
+  position:relative;display:flex;flex-direction:column;justify-content:center;align-items:center;
+  min-height:150px;background:var(--paper);border:1px solid var(--line);
+  border-radius:4px;overflow:hidden;
+  transition:transform .3s ease,box-shadow .3s ease,border-color .3s ease;
+}
+.subject-card::before{content:"";position:absolute;left:0;top:0;width:3px;height:0;background:var(--blue-600);transition:height .4s ease}
+.subject-card:hover{transform:translateY(-6px);border-color:var(--blue-300);box-shadow:0 22px 48px rgba(22,38,63,.10)}
+.subject-card:hover::before{height:100%}
+.subject-card .cn{font-family:var(--serif);font-size:28px;font-weight:700;color:var(--text-strong);letter-spacing:.3em;text-indent:.3em}
+.subject-card .en{margin-top:8px;font-size:12px;letter-spacing:.28em;color:var(--blue-600);text-transform:uppercase;font-weight:500}
+.subject-card .hint{position:absolute;right:14px;top:12px;font-size:11px;color:var(--blue-300);letter-spacing:.14em}
+
+/* ============ 扩展功能按钮 ============ */
+.extras{background:var(--ice-100)}
+.extras-grid{display:flex;flex-wrap:wrap;gap:24px;justify-content:center}
+.extra-card{
+  position:relative;flex:1 1 180px;max-width:240px;min-height:132px;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  background:var(--paper);border:1px solid var(--line);border-radius:4px;overflow:hidden;
+  transition:transform .3s ease,box-shadow .3s ease,border-color .3s ease;
+}
+.extra-card::before{content:"";position:absolute;left:0;top:0;width:3px;height:0;background:var(--blue-600);transition:height .4s ease}
+.extra-card:hover{transform:translateY(-5px);border-color:var(--blue-300);box-shadow:0 18px 40px rgba(22,38,63,.09)}
+.extra-card:hover::before{height:100%}
+.extra-card .cn{font-family:var(--serif);font-size:20px;font-weight:700;color:var(--text-strong);letter-spacing:.14em}
+.extra-card .en{margin-top:7px;font-size:11px;letter-spacing:.24em;color:var(--text-sub);text-transform:uppercase}
+.extra-card.is-empty{background:transparent;border:1px dashed var(--blue-300)}
+.extra-card.is-empty:hover{border-color:var(--blue-600);background:rgba(255,255,255,.6)}
+.extra-card.is-empty .cn{color:var(--text-sub)}
+.extra-card.is-empty .en{color:var(--blue-300)}
+
+/* ============ 页脚 ============ */
+.footer{border-top:1px solid var(--line);padding:48px 24px 36px;background:var(--paper)}
+.footer-inner{max-width:1080px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap}
+.footer-brand{display:flex;align-items:center;gap:14px}
+.footer-brand img{height:38px;width:auto}
+.footer-brand .bn{font-family:var(--serif);font-weight:700;font-size:16px;color:var(--text-strong);letter-spacing:.06em}
+.footer-brand .be{font-size:10px;letter-spacing:.2em;color:var(--text-sub);text-transform:uppercase;margin-top:2px}
+.footer-info{font-size:13px;color:var(--text-sub);letter-spacing:.06em;line-height:2;text-align:right}
+.footer-bottom{max-width:1080px;margin:34px auto 0;padding-top:22px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--text-sub);letter-spacing:.06em}
+
+/* ============ 响应式 ============ */
+@media (max-width:860px){
+  .subjects-grid{grid-template-columns:repeat(3,1fr);gap:18px}
+  .subject-card{min-height:130px}
+  .subject-card .cn{font-size:24px}
+  .extras-grid .extra-card{flex-basis:30%;max-width:none}
+}
+@media (max-width:640px){
+  .nav-inner{padding:0 18px}
+  .brand img{height:32px}
+  .brand-name{font-size:16px}
+  .brand-en{display:none}
+  .nav-back span.txt{display:none}
+  .hero{padding:calc(var(--nav-h) + 56px) 18px 72px}
+  .section{padding:72px 18px}
+  .subjects-grid{grid-template-columns:1fr}
+  .subject-card{min-height:108px}
+  .subject-card .cn{font-size:24px}
+  .extras-grid .extra-card{flex-basis:100%;max-width:none;min-height:104px}
+  .footer-info{text-align:left}
+  .footer-bottom{flex-direction:column;gap:6px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ 顶部导航 ============ -->
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a class="brand" href="学术共研会主页.html" aria-label="返回学术共研会首页">
+      <img src="https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/VaiZbSbpDoc28axjN0IcEPnCn4c" alt="学术共研会会徽">
+      <span>
+        <span class="brand-name">学术共研会</span><br>
+        <span class="brand-en">Academic Common Association</span>
+      </span>
+    </a>
+    <a class="nav-back" href="index.html"><span class="arrow">←</span><span class="txt">返回首页</span></a>
+  </div>
+</header>
+
+<main>
+  <!-- ============ Hero ============ -->
+  <section class="hero">
+    <div class="hero-grid"></div>
+    <div class="hero-inner">
+      <p class="hero-eyebrow">Function Center</p>
+      <h1>学共会信息预览中心</h1>
+      <p>选择功能，开启共研之旅</p>
+    </div>
+  </section>
+
+  <!-- ============ 学科入口 ============ -->
+  <section class="section subjects" id="subjects">
+    <div class="section-inner">
+      <div class="sec-head">
+        <span class="sec-tag">Subjects</span>
+        <h2 class="sec-title">学科入口</h2>
+        <p class="sec-desc">点击进入对应学习与研讨空间。</p>
+      </div>
+      <div class="subjects-grid">
+        <a class="subject-card" href="k.html"><span class="cn">语文</span><span class="en">Chinese</span></a>
+        <a class="subject-card" href="k.html"><span class="cn">数学</span><span class="en">Mathematics</span></a>
+        <a class="subject-card" href="k.html"><span class="cn">英语</span><span class="en">English</span></a>
+        <a class="subject-card" href="k.html"><span class="cn">物理</span><span class="en">Physics</span></a>
+        <a class="subject-card" href="k.html"><span class="cn">化学</span><span class="en">Chemistry</span></a>
+        <a class="subject-card" href="k.html"><span class="cn">生物</span><span class="en">Biology</span></a>
+        <a class="subject-card" href="k.html"><span class="cn">政治</span><span class="en">Politics</span></a>
+        <a class="subject-card" href="k.html"><span class="cn">历史</span><span class="en">History</span></a>
+        <a class="subject-card" href="k.html"><span class="cn">地理</span><span class="en">Geography</span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 扩展功能 ============ -->
+  <section class="section extras" id="extras">
+    <div class="section-inner">
+      <div class="sec-head">
+        <span class="sec-tag">More</span>
+        <h2 class="sec-title">更多功能</h2>
+        <p class="sec-desc">统计与扩展功能入口，为后续升级预留空间。</p>
+      </div>
+      <div class="extras-grid">
+        <a class="extra-card" href="xx.html"><span class="cn">个人信息统计</span><span class="en">Personal Stats</span></a>
+        <a class="extra-card" href="k.html"><span class="cn">组织信息统计</span><span class="en">Organization Stats</span></a>
+        <a class="extra-card is-empty" href="bc.html"><span class="cn">编程</span><span class="en">Coming Soon</span></a>
+        <a class="extra-card is-empty" href="k.html"><span class="cn">暂时为空</span><span class="en">Coming Soon</span></a>
+        <a class="extra-card is-empty" href="k.html"><span class="cn">暂时为空</span><span class="en">Coming Soon</span></a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ============ 页脚 ============ -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <img src="https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/VaiZbSbpDoc28axjN0IcEPnCn4c" alt="学术共研会会徽">
+      <span>
+        <span class="bn">学术共研会</span><br>
+        <span class="be">Academic Common Association</span>
+      </span>
+    </div>
+    <div class="footer-info">
+      <p>理念：Assertive · Courageous · Accommodating · 果敢 · 勇敢 · 兼容</p>
+      <p>联系我们：<a href="mailto:contact@aca.example.org" style="color:var(--blue-600)">contact@aca.example.org</a></p>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 学术共研会 Academic Common Association</span>
+    <span>以共研之名，赴学术之约</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var nav = document.getElementById("nav");
+  function onScroll(){ nav.classList.toggle("scrolled", window.scrollY > 8); }
+  window.addEventListener("scroll", onScroll, {passive:true});
+  onScroll();
+})();
+</script>
+</body>
+</html>

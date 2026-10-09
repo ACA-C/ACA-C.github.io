@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>登录 / 注册</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .auth-card {
+    background: #fff; border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    width: 100%; max-width: 400px; overflow: hidden;
+  }
+  .auth-header {
+    background: linear-gradient(135deg, #4a7dff 0%, #6c5ce7 100%);
+    padding: 32px 24px 24px; text-align: center; color: #fff;
+  }
+  .auth-header .logo { font-size: 40px; margin-bottom: 8px; }
+  .auth-header h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+  .auth-header p { font-size: 13px; opacity: 0.85; }
+  .auth-tabs { display: flex; border-bottom: 1px solid #eee; }
+  .auth-tab {
+    flex: 1; padding: 14px; text-align: center; font-size: 15px;
+    font-weight: 500; color: #999; cursor: pointer; transition: all 0.2s;
+    border-bottom: 2px solid transparent; background: none;
+    border-top: none; border-left: none; border-right: none; font-family: inherit;
+  }
+  .auth-tab.active { color: #4a7dff; border-bottom-color: #4a7dff; }
+  .auth-tab:hover:not(.active) { color: #666; background: #f9f9f9; }
+  .auth-body { padding: 28px 24px 24px; }
+  .form-group { margin-bottom: 18px; }
+  .form-group label {
+    display: block; font-size: 13px; color: #666; margin-bottom: 6px; font-weight: 500;
+  }
+  .form-group input {
+    width: 100%; padding: 11px 14px; border: 1px solid #dcdfe6; border-radius: 8px;
+    font-size: 14px; font-family: inherit; transition: all 0.2s; outline: none;
+  }
+  .form-group input:focus {
+    border-color: #4a7dff; box-shadow: 0 0 0 3px rgba(74,125,255,0.1);
+  }
+  .form-group input.error { border-color: #ff4d4f; }
+  .error-msg { color: #ff4d4f; font-size: 12px; margin-top: 5px; display: none; }
+  .error-msg.show { display: block; }
+  .btn-submit {
+    width: 100%; padding: 12px;
+    background: linear-gradient(135deg, #4a7dff 0%, #6c5ce7 100%);
+    color: #fff; border: none; border-radius: 8px; font-size: 15px;
+    font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: inherit;
+    margin-top: 6px;
+  }
+  .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(74,125,255,0.35); }
+  .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+  .auth-footer {
+    padding: 14px 24px 20px; border-top: 1px solid #f0f0f0;
+    display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+  }
+  .btn-link {
+    background: none; border: none; color: #888; font-size: 12px;
+    cursor: pointer; text-decoration: underline; font-family: inherit; padding: 4px 8px;
+  }
+  .btn-link:hover { color: #4a7dff; }
+  .toast {
+    position: fixed; top: 20px; left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: #333; color: #fff; padding: 10px 24px; border-radius: 6px;
+    font-size: 14px; z-index: 999; transition: transform 0.3s ease;
+    max-width: 90%; text-align: center;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- 隐藏的 iframe：加载 YH.html 作为数据容器 -->
+<iframe id="yhFrame" src="YH.html" style="display:none;"></iframe>
+
+<div class="auth-card">
+  <div class="auth-header">
+    <div class="logo">🔐</div>
+    <h1>用户中心</h1>
+    <p>账号数据由 A.C.A.信息部 管理</p>
+  </div>
+  <div id="authContent"></div>
+  <div class="auth-footer">
+    <button class="btn-link" onclick="window.location.href='index.html'">返回主页</button>
+    <button class="btn-link" onclick="window.open('YH.html','_blank')">用户管理</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function() {
+  const CURRENT_KEY = 'yh_current_user';
+  let yhReady = false;
+  const pendingCalls = [];
+  const responseHandlers = {};
+  let msgIdCounter = 0;
+
+  const iframe = document.getElementById('yhFrame');
+
+  // ========== 与 YH.html 通信 ==========
+  window.addEventListener('message', function(e) {
+    // YH.html 就绪通知
+    if (e.data && e.data.action === 'yh-ready') {
+      yhReady = true;
+      while (pendingCalls.length > 0) {
+        const call = pendingCalls.shift();
+        doCall(call.action, call.data, call.resolve, call.reject);
+      }
+      return;
+    }
+    // callYH 的响应
+    if (e.data && e.data.id && e.data.result) {
+      const handler = responseHandlers[e.data.id];
+      if (handler) {
+        delete responseHandlers[e.data.id];
+        if (e.data.result.success) handler.resolve(e.data.result);
+        else handler.reject(new Error(e.data.result.error || '操作失败'));
+      }
+    }
+  });
+
+  function doCall(action, data, resolve, reject) {
+    const id = 'msg_' + (++msgIdCounter) + '_' + Date.now();
+    responseHandlers[id] = { resolve: resolve, reject: reject };
+    iframe.contentWindow.postMessage({ id: id, action: action, data: data }, '*');
+    setTimeout(function() {
+      if (responseHandlers[id]) {
+        delete responseHandlers[id];
+        reject(new Error('请求超时，请确认 YH.html 与本页面在同一目录'));
+      }
+    }, 8000);
+  }
+
+  function callYH(action, data) {
+    return new Promise(function(resolve, reject) {
+      if (yhReady) {
+        doCall(action, data, resolve, reject);
+      } else {
+        pendingCalls.push({ action: action, data: data, resolve: resolve, reject: reject });
+      }
+    });
+  }
+
+  // ========== 工具 ==========
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(function(){ t.classList.remove('show'); }, 2000);
+  }
+  function escapeHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str || '';
+    return d.innerHTML;
+  }
+  function getCurrentUser() { return localStorage.getItem(CURRENT_KEY); }
+  function setCurrentUser(u) { localStorage.setItem(CURRENT_KEY, u); }
+  function clearCurrentUser() { localStorage.removeItem(CURRENT_KEY); }
+
+  // ========== 登录 / 注册 ==========
+  async function doLogin(username, password) {
+    return await callYH('verify', { username: username, password: password });
+  }
+  async function doRegister(username, password) {
+    return await callYH('add', { username: username, password: password });
+  }
+
+  // ========== 界面渲染 ==========
+  function render() {
+    const content = document.getElementById('authContent');
+    const currentUser = getCurrentUser();
+    if (currentUser) {
+      const initial = currentUser.charAt(0).toUpperCase();
+      content.innerHTML =
+        '<div style="padding:28px 24px;text-align:center;">' +
+          '<div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#4a7dff,#6c5ce7);color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:600;margin:0 auto 14px;">' + initial + '</div>' +
+          '<div style="font-size:18px;font-weight:600;color:#1a1a2e;margin-bottom:6px;">欢迎回来，' + escapeHtml(currentUser) + '</div>' +
+          '<div style="font-size:13px;color:#888;margin-bottom:20px;">您已成功登录</div>' +
+          '<a href="zzzz.html" style="display:inline-block;padding:11px 32px;background:linear-gradient(135deg,#4a7dff,#6c5ce7);color:#fff;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none;margin-bottom:10px;">进入系统 →</a><br>' +
+          '<button onclick="window._logout()" style="background:none;border:none;color:#999;font-size:13px;cursor:pointer;text-decoration:underline;">退出登录</button>' +
+        '</div>';
+    } else {
+      content.innerHTML =
+        '<div class="auth-tabs">' +
+          '<button class="auth-tab active" id="tabLogin" onclick="window._switch(\'login\')">登录</button>' +
+          '<button class="auth-tab" id="tabRegister" onclick="window._switch(\'register\')">注册</button>' +
+        '</div>' +
+        '<div class="auth-body">' +
+          '<form id="loginForm" onsubmit="return window._login(event)">' +
+            '<div class="form-group"><label>用户名</label>' +
+              '<input type="text" id="loginUsername" placeholder="请输入用户名" autocomplete="username">' +
+              '<div class="error-msg" id="loginUserErr"></div></div>' +
+            '<div class="form-group"><label>密码</label>' +
+              '<input type="password" id="loginPassword" placeholder="请输入密码" autocomplete="current-password">' +
+              '<div class="error-msg" id="loginPwdErr"></div></div>' +
+            '<button type="submit" class="btn-submit" id="loginBtn">登 录</button>' +
+          '</form>' +
+          '<form id="registerForm" style="display:none;" onsubmit="return window._register(event)">' +
+            '<div class="form-group"><label>用户名</label>' +
+              '<input type="text" id="regUsername" placeholder="3-16位字符" autocomplete="username">' +
+              '<div class="error-msg" id="regUserErr"></div></div>' +
+            '<div class="form-group"><label>密码</label>' +
+              '<input type="password" id="regPassword" placeholder="至少6位" autocomplete="new-password">' +
+              '<div class="error-msg" id="regPwdErr"></div></div>' +
+            '<div class="form-group"><label>确认密码</label>' +
+              '<input type="password" id="regConfirm" placeholder="再次输入密码" autocomplete="new-password">' +
+              '<div class="error-msg" id="regConfirmErr"></div></div>' +
+            '<button type="submit" class="btn-submit" id="regBtn">注 册</button>' +
+          '</form>' +
+        '</div>';
+    }
+  }
+
+  function clearErrors() {
+    document.querySelectorAll('.error-msg').forEach(function(el) {
+      el.classList.remove('show'); el.textContent = '';
+    });
+    document.querySelectorAll('input').forEach(function(el) { el.classList.remove('error'); });
+  }
+  function showErr(inputId, errId, msg) {
+    document.getElementById(inputId).classList.add('error');
+    const el = document.getElementById(errId);
+    el.textContent = msg; el.classList.add('show');
+  }
+
+  // ========== 暴露给 onclick ==========
+  window._switch = function(tab) {
+    clearErrors();
+    const lt = document.getElementById('tabLogin');
+    const rt = document.getElementById('tabRegister');
+    const lf = document.getElementById('loginForm');
+    const rf = document.getElementById('registerForm');
+    if (tab === 'login') {
+      lt.classList.add('active'); rt.classList.remove('active');
+      lf.style.display = 'block'; rf.style.display = 'none';
+    } else {
+      rt.classList.add('active'); lt.classList.remove('active');
+      rf.style.display = 'block'; lf.style.display = 'none';
+    }
+  };
+
+  window._login = function(e) {
+    e.preventDefault();
+    clearErrors();
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    let hasError = false;
+    if (!username) { showErr('loginUsername','loginUserErr','请输入用户名'); hasError = true; }
+    if (!password) { showErr('loginPassword','loginPwdErr','请输入密码'); hasError = true; }
+    if (hasError) return false;
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = true; btn.textContent = '登录中...';
+    doLogin(username, password)
+      .then(function() {
+        setCurrentUser(username);
+        showToast('登录成功，正在跳转...');
+        setTimeout(function() { window.location.href = 'zzzz.html'; }, 800);
+      })
+      .catch(function(err) {
+        btn.disabled = false; btn.textContent = '登 录';
+        if (err.message === '用户不存在') showErr('loginUsername','loginUserErr',err.message);
+        else if (err.message === '密码错误') showErr('loginPassword','loginPwdErr',err.message);
+        else showToast(err.message);
+      });
+    return false;
+  };
+
+  window._register = function(e) {
+    e.preventDefault();
+    clearErrors();
+    const username = document.getElementById('regUsername').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const confirm = document.getElementById('regConfirm').value;
+    let hasError = false;
+    if (!username) { showErr('regUsername','regUserErr','请输入用户名'); hasError = true; }
+    else if (username.length < 3 || username.length > 16) { showErr('regUsername','regUserErr','用户名需 3-16 位'); hasError = true; }
+    if (!password) { showErr('regPassword','regPwdErr','请输入密码'); hasError = true; }
+    else if (password.length < 6) { showErr('regPassword','regPwdErr','密码至少 6 位'); hasError = true; }
+    if (!confirm) { showErr('regConfirm','regConfirmErr','请确认密码'); hasError = true; }
+    else if (confirm !== password) { showErr('regConfirm','regConfirmErr','两次密码不一致'); hasError = true; }
+    if (hasError) return false;
+    const btn = document.getElementById('regBtn');
+    btn.disabled = true; btn.textContent = '注册中...';
+    doRegister(username, password)
+      .then(function() {
+        showToast('注册成功，正在跳转登录...');
+        setTimeout(function() {
+          window._switch('login');
+          document.getElementById('loginUsername').value = username;
+          document.getElementById('loginPassword').focus();
+          btn.disabled = false; btn.textContent = '注 册';
+        }, 800);
+      })
+      .catch(function(err) {
+        btn.disabled = false; btn.textContent = '注 册';
+        if (err.message === '用户名已存在') showErr('regUsername','regUserErr',err.message);
+        else showToast(err.message);
+      });
+    return false;
+  };
+
+  window._logout = function() {
+    if (!confirm('确定退出登录吗？')) return;
+    clearCurrentUser();
+    render();
+    showToast('已退出登录');
+  };
+
+  // ========== 初始化 ==========
+  render();
+
+  // 5 秒后 YH.html 还没就绪就提示
+  setTimeout(function() {
+    if (!yhReady) {
+      showToast('无法连接 YH.html，请确认文件在同一目录，或用本地服务器/Firefox 打开');
+    }
+  }, 5000);
+})();
+</script>
+
+</body>
+</html>

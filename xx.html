@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>信息卡片管理</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f5f6f8;
+    color: #2c3e50;
+    min-height: 100vh;
+  }
+
+  /* 顶部栏 */
+  .header {
+    background: #fff;
+    border-bottom: 1px solid #e8e8e8;
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .back-btn {
+    background: #f0f2f5;
+    border: none;
+    border-radius: 6px;
+    padding: 7px 14px;
+    font-size: 13px;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .back-btn:hover {
+    background: #e4e7eb;
+    color: #333;
+  }
+  .header h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a1a2e;
+  }
+  .header .count {
+    font-size: 13px;
+    color: #888;
+  }
+
+  /* 主体容器 */
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 32px;
+  }
+
+  /* 备份提示条 */
+  .backup-bar {
+    background: #fffbe6;
+    border: 1px solid #ffe58f;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: #8c6d1f;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .backup-bar .tip-icon { font-size: 16px; }
+  .backup-bar .tip-text { flex: 1; min-width: 200px; }
+  .backup-bar .tip-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* 输入表单 */
+  .form-panel {
+    background: #fff;
+    border-radius: 10px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .form-panel h2 {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #333;
+  }
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .form-group { display: flex; flex-direction: column; }
+  .form-group label {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  .form-group input,
+  .form-group textarea {
+    padding: 10px 12px;
+    border: 1px solid #dcdfe6;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.2s;
+    outline: none;
+    background: #fff;
+  }
+  .form-group input:focus,
+  .form-group textarea:focus {
+    border-color: #4a7dff;
+    box-shadow: 0 0 0 2px rgba(74,125,255,0.1);
+  }
+  .form-group textarea {
+    resize: vertical;
+    min-height: 70px;
+  }
+  .form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+  }
+
+  /* 按钮 */
+  .btn {
+    padding: 9px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .btn-primary {
+    background: #4a7dff;
+    color: #fff;
+  }
+  .btn-primary:hover { background: #3a6bee; }
+  .btn-secondary {
+    background: #f0f2f5;
+    color: #555;
+  }
+  .btn-secondary:hover { background: #e4e7eb; }
+  .btn-danger {
+    background: #ff4d4f;
+    color: #fff;
+  }
+  .btn-danger:hover { background: #e64547; }
+  .btn-success {
+    background: #52c41a;
+    color: #fff;
+  }
+  .btn-success:hover { background: #49b017; }
+  .btn-warning {
+    background: #faad14;
+    color: #fff;
+  }
+  .btn-warning:hover { background: #e69a0e; }
+  .btn-sm {
+    padding: 5px 12px;
+    font-size: 12px;
+  }
+
+  /* 卡片网格 */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  /* 卡片 */
+  .card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    border: 1px solid #eee;
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+  .card-id {
+    display: inline-block;
+    background: #eef2ff;
+    color: #4a7dff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+  }
+  .card-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-bottom: 8px;
+    word-break: break-word;
+  }
+  .card-desc {
+    font-size: 13px;
+    color: #666;
+    line-height: 1.6;
+    word-break: break-word;
+    white-space: pre-wrap;
+  }
+  .card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #f0f0f0;
+  }
+
+  /* 空状态 */
+  .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: #aaa;
+  }
+  .empty-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+  }
+  .empty-text {
+    font-size: 14px;
+  }
+
+  /* 编辑模式高亮 */
+  .card.editing {
+    border-color: #4a7dff;
+    box-shadow: 0 0 0 2px rgba(74,125,255,0.15);
+  }
+
+  /* 提示消息 */
+  .toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: #333;
+    color: #fff;
+    padding: 10px 24px;
+    border-radius: 6px;
+    font-size: 14px;
+    z-index: 999;
+    transition: transform 0.3s ease;
+    max-width: 90%;
+    text-align: center;
+  }
+  .toast.show {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* 隐藏的文件输入 */
+  .hidden-input { display: none; }
+
+  /* 工具栏 */
+  .toolbar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .toolbar-label {
+    font-size: 13px;
+    color: #888;
+    margin-right: auto;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <button class="back-btn" onclick="window.location.href='zzzz.html'">← 返回</button>
+    <h1>学术共研会-信息部</h1>
+  </div>
+  <span class="count" id="cardCount">共 0 条</span>
+</div>
+
+<div class="container">
+  <!-- 备份提示条 -->
+  <div class="backup-bar">
+    <span class="tip-icon">💾</span>
+    <span class="tip-text">数据保存在本浏览器，建议定期导出备份到金山文档，防止清理缓存丢失。</span>
+    <div class="tip-actions">
+      <button class="btn btn-sm btn-success" onclick="exportCSV()">导出 CSV</button>
+      <button class="btn btn-sm btn-primary" onclick="copyTable()">复制表格</button>
+      <button class="btn btn-sm btn-warning" onclick="document.getElementById('importFile').click()">导入备份</button>
+    </div>
+  </div>
+
+  <!-- 输入表单 -->
+  <div class="form-panel">
+    <h2 id="formTitle">新增信息</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label>编号</label>
+        <input type="text" id="inputId" placeholder="例如：ACA-001">
+      </div>
+      <div class="form-group">
+        <label>名称</label>
+        <input type="text" id="inputName" placeholder="请输入名称">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>描述</label>
+      <textarea id="inputDesc" placeholder="请输入描述信息"></textarea>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" id="btnSave">保存</button>
+      <button class="btn btn-secondary" id="btnCancel" style="display:none;">取消编辑</button>
+    </div>
+  </div>
+
+  <!-- 卡片列表 -->
+  <div class="card-grid" id="cardGrid"></div>
+</div>
+
+<input type="file" id="importFile" class="hidden-input" accept=".json,.csv" onchange="importFile(event)">
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const STORAGE_KEY = 'info_cards';
+  let cards = [];
+  let editingIndex = -1;
+
+  const inputId = document.getElementById('inputId');
+  const inputName = document.getElementById('inputName');
+  const inputDesc = document.getElementById('inputDesc');
+  const btnSave = document.getElementById('btnSave');
+  const btnCancel = document.getElementById('btnCancel');
+  const cardGrid = document.getElementById('cardGrid');
+  const cardCount = document.getElementById('cardCount');
+  const formTitle = document.getElementById('formTitle');
+  const toast = document.getElementById('toast');
+
+  // ========== 本地存储 ==========
+  function loadCards() {
+    try {
+      const data = localStorage.getItem(STORAGE_KEY);
+      cards = data ? JSON.parse(data) : [];
+    } catch (e) {
+      cards = [];
+    }
+  }
+
+  function saveCards() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cards));
+  }
+
+  // ========== 提示 ==========
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  }
+
+  // ========== HTML 转义 ==========
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str || '';
+    return div.innerHTML;
+  }
+
+  // ========== 渲染 ==========
+  function render() {
+    cardCount.textContent = `共 ${cards.length} 条`;
+
+    if (cards.length === 0) {
+      cardGrid.innerHTML = `
+        <div class="empty" style="grid-column: 1 / -1;">
+          <div class="empty-icon">📋</div>
+          <div class="empty-text">暂无信息，在上方表单添加第一条吧</div>
+        </div>`;
+      return;
+    }
+
+    cardGrid.innerHTML = cards.map((card, i) => `
+      <div class="card ${i === editingIndex ? 'editing' : ''}">
+        <span class="card-id">${escapeHtml(card.id)}</span>
+        <div class="card-name">${escapeHtml(card.name)}</div>
+        <div class="card-desc">${escapeHtml(card.desc)}</div>
+        <div class="card-actions">
+          <button class="btn btn-secondary btn-sm" onclick="editCard(${i})">修改</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteCard(${i})">删除</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ========== 保存（新增或修改） ==========
+  btnSave.addEventListener('click', () => {
+    const id = inputId.value.trim();
+    const name = inputName.value.trim();
+    const desc = inputDesc.value.trim();
+
+    if (!id) { showToast('请输入编号'); return; }
+    if (!name) { showToast('请输入名称'); return; }
+
+    if (editingIndex >= 0) {
+      cards[editingIndex] = { id, name, desc };
+      showToast('修改成功');
+      cancelEdit();
+    } else {
+      cards.push({ id, name, desc });
+      showToast('添加成功');
+      clearForm();
+    }
+
+    saveCards();
+    render();
+  });
+
+  // ========== 取消编辑 ==========
+  btnCancel.addEventListener('click', cancelEdit);
+
+  function cancelEdit() {
+    editingIndex = -1;
+    formTitle.textContent = '新增信息';
+    btnSave.textContent = '保存';
+    btnCancel.style.display = 'none';
+    clearForm();
+    render();
+  }
+
+  function clearForm() {
+    inputId.value = '';
+    inputName.value = '';
+    inputDesc.value = '';
+    inputId.focus();
+  }
+
+  // ========== 修改 ==========
+  window.editCard = function(index) {
+    const card = cards[index];
+    editingIndex = index;
+    inputId.value = card.id;
+    inputName.value = card.name;
+    inputDesc.value = card.desc;
+    formTitle.textContent = '修改信息';
+    btnSave.textContent = '确认修改';
+    btnCancel.style.display = 'inline-block';
+    render();
+    inputId.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
+  // ========== 删除 ==========
+  window.deleteCard = function(index) {
+    const card = cards[index];
+    if (!confirm(`确定删除「${card.name}」吗？`)) return;
+    if (editingIndex === index) cancelEdit();
+    cards.splice(index, 1);
+    saveCards();
+    render();
+    showToast('删除成功');
+  };
+
+  // ========== 导出 CSV ==========
+  window.exportCSV = function() {
+    if (cards.length === 0) { showToast('没有数据可导出'); return; }
+
+    const header = '编号,名称,描述';
+    const rows = cards.map(c => {
+      const id = `"${(c.id || '').replace(/"/g, '""')}"`;
+      const name = `"${(c.name || '').replace(/"/g, '""')}"`;
+      const desc = `"${(c.desc || '').replace(/"/g, '""').replace(/\n/g, ' ')}"`;
+      return `${id},${name},${desc}`;
+    });
+
+    // 加 BOM 让 Excel/金山文档正确识别中文
+    const csvContent = '\uFEFF' + header + '\n' + rows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `信息卡片备份_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast('CSV 已导出，可上传到金山文档');
+  };
+
+  // ========== 复制为表格（可直接粘贴到金山文档） ==========
+  window.copyTable = function() {
+    if (cards.length === 0) { showToast('没有数据可复制'); return; }
+
+    const header = '编号\t名称\t描述';
+    const rows = cards.map(c => `${c.id || ''}\t${c.name || ''}\t${(c.desc || '').replace(/\n/g, ' ')}`);
+    const text = header + '\n' + rows.join('\n');
+
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('已复制，打开金山文档按 Ctrl+V 粘贴');
+    }).catch(() => {
+      // 降级方案
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      showToast('已复制，打开金山文档按 Ctrl+V 粘贴');
+    });
+  };
+
+  // ========== 导入备份 ==========
+  window.importFile = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const content = e.target.result;
+      try {
+        if (file.name.endsWith('.json')) {
+          const imported = JSON.parse(content);
+          if (Array.isArray(imported)) {
+            if (confirm(`检测到 ${imported.length} 条数据，是否合并到当前列表？\n点"确定"合并，点"取消"覆盖当前数据。`)) {
+              cards = cards.concat(imported);
+            } else {
+              cards = imported;
+            }
+            saveCards();
+            render();
+            showToast('导入成功');
+          } else {
+            showToast('JSON 格式不正确');
+          }
+        } else if (file.name.endsWith('.csv')) {
+          const lines = content.replace(/^\uFEFF/, '').split('\n').filter(l => l.trim());
+          const imported = [];
+          // 跳过表头
+          for (let i = 1; i < lines.length; i++) {
+            const parts = parseCSVLine(lines[i]);
+            if (parts.length >= 2) {
+              imported.push({
+                id: parts[0] || '',
+                name: parts[1] || '',
+                desc: parts[2] || ''
+              });
+            }
+          }
+          if (imported.length > 0) {
+            if (confirm(`检测到 ${imported.length} 条数据，是否合并到当前列表？\n点"确定"合并，点"取消"覆盖当前数据。`)) {
+              cards = cards.concat(imported);
+            } else {
+              cards = imported;
+            }
+            saveCards();
+            render();
+            showToast('导入成功');
+          } else {
+            showToast('CSV 中没有有效数据');
+          }
+        }
+      } catch (err) {
+        showToast('文件解析失败：' + err.message);
+      }
+      event.target.value = '';
+    };
+    reader.readAsText(file, 'UTF-8');
+  };
+
+  // 解析 CSV 单行（处理引号内的逗号）
+  function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') {
+        if (inQuotes && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === ',' && !inQuotes) {
+        result.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current.trim());
+    return result;
+  }
+
+  // ========== 返回主页 ==========
+  window.goBack = function() {
+    window.location.href = 'index.html';
+  };
+
+  // ========== 初始化 ==========
+  loadCards();
+  render();
+</script>
+
+</body>
+</html>

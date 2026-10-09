@@ -1,0 +1,239 @@
+<html>
+	<head>
+		<title>编程</title>
+	</head>
+	<body>
+		<button onclick = "window.location.href='index.html'" style="width:300; height:150; font-size:36px;">返回</button>
+		<h1>
+			网页文件的后缀
+			.html
+			
+			
+			一个网站的基本格式
+			<html>
+			
+			</html>
+			网页的所有代码全部写在这里面
+			你也可以把它理解成调用html
+			
+			
+			现在来教你给这个网页写个标题
+			<html>
+			    <head>
+				    <title>内容</title>
+				</head>
+			</html>
+			正如head这个单词的意思，这是网页的头部
+			而title是标题的意思，再两个title的里面可以直接输入中文
+			
+			
+			聪明的你绝对发现了一个规律
+			每一个单词都是两个两个出现的，且代码都是写在这两个单词中间
+			而且第二个单词后面都有一个斜杠
+			这样一对的意义就类似于开始和结束，告诉计算机你从这开始到那结束的是一段代码
+			
+			
+			现在你的网页还是空白的
+			现在我们就来给它加一个"身体"
+			<html>
+			    <head>
+				    <title>内容</title>
+				</head>
+				<body>
+				
+				</body>
+			</html>
+			网页里的元素全部都写在这里面
+			例如增加一个文字
+			<html>
+			    <head>
+				    <title>内容</title>
+				</head>
+				<body>
+				    <h1>你好，世界</h1>
+				</body>
+			</html>
+			
+			
+			当然也可修改颜色
+			<html>
+			    <head>
+				    <title>内容</title>
+				</head>
+				<body>
+				    <h1 style = "color:red;">你好，世界</h1>
+				</body>
+			</html>
+			这样字体就是红色了
+			现在演示这里颜色用了red，通常都是用16进制，也可用RGB颜色
+			
+			
+			如果字太多了，例如
+			<html>
+			    <head>
+				    <title>内容</title>
+				</head>
+				<body>
+				    <h1>你好，世界1</h1>
+					<h1>你好，世界2</h1>
+					<h1>你好，世界3</h1>
+					<h1>你好，世界4</h1>
+					<h1>你好，世界5</h1>
+					...
+					<h1>你好，世界n</h1>
+				</body>
+			</html>
+			如果一个个的去给它们加<h1 style = "color:red;">你好，世界</h1>
+			的话，对于程序员是非常不健康的行为
+			于是，我们可以在"头"这里给它定义样式
+			<html>
+			    <head>
+				    <title>内容</title>
+					<style>
+					    h1{
+							color:#ff0000;
+						}
+					</style>
+				</head>
+				<body>
+				    <h1>你好，世界</h1>
+				</body>
+			</html>
+			这样，所有的<h1></h1>就都会是红色
+			
+			可以在h1{}里面加入
+			background-color: #0099ff;
+			来添加背景色
+			
+			还可以在h1{}里面加入
+			text-align: center;
+			来让字体居中
+			
+			还可以在h1{}里面加入
+			font-size: 36px;
+			来改变字体大小
+			
+			还可以这样
+			<h1 align = "center">你好，世界</h1>
+			
+			
+			导入图片我们只需要使用这段代码
+			<img src = "图片地址" alt = "图片说明">
+			
+			
+			生成图形这样写
+			在生成图形前要先生成一个画布
+			<svg width = "100" height = "100">
+			
+			</svg>
+			width是宽，height是高
+			width，height同样可以用在
+			<head>
+			    <style>
+				
+				</style>
+			</head>
+			中，例如
+			<head>
+			    <style>
+				    .jl{
+						width:100px;
+						height:100px;
+					}
+				</style>
+			</head>
+			再举一个例子，前面说到的文字背景色，我们就可以通过width，height改变背景大小
+			<html>
+			    <head>
+				    <title>内容</title>
+					<style>
+					    h1{
+							color:#ff0000;
+							width:100px;
+							height:100px;
+						}
+					</style>
+				</head>
+				<body>
+				    <h1>你好，世界</h1>
+				</body>
+			</html>
+			
+			回归正题
+			圆形
+			<svg width = "100" height = "100">
+			    <circle cx = "50" cy = "50" r = "40" fill = "red"/>
+			</svg>
+			cx和cy是圆心坐标，r是圆的半径，fill是图形颜色
+			矩形
+			<svg width = "100" height = "100">
+			    <rect width = "100" height = "100" fill = "red"/>
+			</svg>
+			
+			
+			在
+			<head>
+			    <style>
+				    .jx{
+						
+					}
+				</style>
+			</head>
+			中,可以通过margin-top，margin-bottom，margin-left，margin-right来改变位置
+			他们分别改变的是：距离上边框，距离下边框，距离左边框，距离右边框
+			例如
+			<head>
+			    <style>
+				    .jx{
+						margin-top:20px;
+						margin-bottom:20px;
+						margin-left:20px;
+						margin-right:20px;
+					}
+				</style>
+			</head>
+			矩形改位置通过x,y来进行修改，例如
+			<rect x = "20" y = "30" width = "100" height = "100" fill = "red"/>
+			图片/画布改位置通过top，bottom，left，right来进行修改，例如
+			<img src = "图片地址" alt = "图片说明" style = "
+			position:relative;
+			top:20px;
+			left:30px;
+			">
+			
+			
+			现在我们来添加按钮
+			<button>按钮</button>
+			现在的按钮还没有任何功能
+			现在给它添加一个跳转功能
+			<button onclick = "window.location.href='跳转到的地址'">按钮</button>
+			如果就这样的话，按钮会非常丑
+			现在要美化它
+			<html>
+			<head>
+			    <style>
+				    .jx{
+						text-align: center;
+						width:100px;
+						height:50px;
+						box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+						background-color: #f3f3f3;
+						border: 1px solid #e5e5e5;
+					}
+				</style>
+			</head>
+			<body>
+			    <button class = "jx" onclick = "window.location.href='跳转到的地址'">按钮</button>
+			</body>
+			</html>
+			是不是看傻了，我来一个个给你解释
+			text-align: center; 这是文字居中
+			width:100px; 这是宽
+			height:50px; 这是长
+			box-shadow: 0 2px 4px rgba(0,0,0,0.2); 这是添加阴影
+			background-color: #f3f3f3; 这是背景颜色
+			border: 1px solid #e5e5e5; 这是边框颜色
+			其实有很多都是学过的
+		</h1>
+	</body>
+</html>

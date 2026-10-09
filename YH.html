@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>用户数据中心 - YH</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f5f6f8; color: #2c3e50; min-height: 100vh;
+  }
+  .header {
+    background: linear-gradient(135deg, #4a7dff 0%, #6c5ce7 100%);
+    padding: 20px 32px; display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 10px; color: #fff;
+  }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .back-btn {
+    background: rgba(255,255,255,0.2); border: none; border-radius: 6px;
+    padding: 7px 14px; font-size: 13px; color: #fff; cursor: pointer;
+    transition: all 0.2s; font-family: inherit;
+  }
+  .back-btn:hover { background: rgba(255,255,255,0.3); }
+  .header h1 { font-size: 20px; font-weight: 600; }
+  .header .count {
+    font-size: 13px; opacity: 0.9; background: rgba(255,255,255,0.15);
+    padding: 4px 12px; border-radius: 20px;
+  }
+  .container { max-width: 1000px; margin: 0 auto; padding: 24px 32px; }
+  .notice {
+    background: #e6f7ff; border: 1px solid #91d5ff; border-radius: 8px;
+    padding: 12px 16px; font-size: 13px; color: #0050b3; margin-bottom: 16px; line-height: 1.6;
+  }
+  .notice b { color: #003a8c; }
+  .toolbar {
+    background: #fff; border-radius: 10px; padding: 16px 20px;
+    margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
+    flex-wrap: wrap; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .toolbar-label { font-size: 13px; color: #888; margin-right: auto; }
+  .btn {
+    padding: 8px 16px; border: none; border-radius: 6px; font-size: 13px;
+    font-weight: 500; cursor: pointer; transition: all 0.2s; font-family: inherit;
+  }
+  .btn-primary { background: #4a7dff; color: #fff; }
+  .btn-primary:hover { background: #3a6bee; }
+  .btn-success { background: #52c41a; color: #fff; }
+  .btn-success:hover { background: #49b017; }
+  .btn-danger { background: #ff4d4f; color: #fff; }
+  .btn-danger:hover { background: #e64547; }
+  .btn-warning { background: #faad14; color: #fff; }
+  .btn-warning:hover { background: #e69a0e; }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+  .table-wrap {
+    background: #fff; border-radius: 10px; overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: #fafafa; }
+  th {
+    padding: 14px 16px; text-align: left; font-size: 13px; font-weight: 600;
+    color: #666; border-bottom: 1px solid #eee;
+  }
+  td {
+    padding: 14px 16px; font-size: 14px; color: #333; border-bottom: 1px solid #f5f5f5;
+  }
+  tbody tr:hover { background: #f9faff; }
+  tbody tr:last-child td { border-bottom: none; }
+  .user-cell { display: flex; align-items: center; gap: 10px; }
+  .user-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, #4a7dff, #6c5ce7); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 600; flex-shrink: 0;
+  }
+  .badge-builtin {
+    display: inline-block; background: #fff7e6; color: #fa8c16;
+    font-size: 11px; padding: 2px 8px; border-radius: 10px; margin-left: 8px;
+  }
+  .pwd-cell { font-family: monospace; color: #888; }
+  .pwd-toggle {
+    background: none; border: none; color: #4a7dff; cursor: pointer;
+    font-size: 12px; margin-left: 6px; font-family: inherit;
+  }
+  .time-cell { font-size: 12px; color: #999; }
+  .empty {
+    text-align: center; padding: 60px 20px; color: #aaa;
+  }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+  .empty-text { font-size: 14px; margin-bottom: 16px; }
+  .toast {
+    position: fixed; top: 20px; left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: #333; color: #fff; padding: 10px 24px; border-radius: 6px;
+    font-size: 14px; z-index: 999; transition: transform 0.3s ease;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .hidden-input { display: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <button class="back-btn" onclick="goBack()">← 返回</button>
+    <h1>用户数据中心</h1>
+  </div>
+  <span class="count" id="userCount">共 0 位用户</span>
+</div>
+
+<div class="container">
+  <div class="notice">
+    <b>本文件是账号数据容器。</b>login.html 通过 iframe 加载本文件来读写账号。
+    注册的新用户由本页面管理存储。如需将用户永久写入本 HTML 文件，点击「导出 YH.html」下载新文件覆盖原文件即可。
+  </div>
+
+  <div class="toolbar">
+    <span class="toolbar-label">账号数据由本页面统一管理</span>
+    <button class="btn btn-warning btn-sm" onclick="exportYHHTML()">导出 YH.html</button>
+    <button class="btn btn-success btn-sm" onclick="exportTXT()">导出 YH.txt</button>
+    <button class="btn btn-primary btn-sm" onclick="document.getElementById('importFile').click()">导入 YH.txt</button>
+    <button class="btn btn-danger btn-sm" onclick="clearAll()">清空注册用户</button>
+  </div>
+
+  <div class="table-wrap">
+    <table id="userTable">
+      <thead>
+        <tr>
+          <th style="width:30%;">用户名</th>
+          <th style="width:25%;">密码</th>
+          <th style="width:25%;">注册时间</th>
+          <th style="width:20%;">操作</th>
+        </tr>
+      </thead>
+      <tbody id="userTableBody"></tbody>
+    </table>
+    <div id="emptyState" class="empty" style="display:none;">
+      <div class="empty-icon">👥</div>
+      <div class="empty-text">暂无用户，去 login.html 注册第一个账号吧</div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="importFile" class="hidden-input" accept=".txt" onchange="importTXT(event)">
+<div class="toast" id="toast"></div>
+
+<!-- ============================================================ -->
+<!-- 内置永久用户：手动编辑下面的数组，添加的用户会写死在本文件中 -->
+<!-- ============================================================ -->
+<script>
+  const BUILTIN_USERS = [
+     { username: "hjh", password: "081030", regTime: "2024-01-01T00:00:00.000Z" }
+    // { username: "admin", password: "123456", regTime: "2024-01-01T00:00:00.000Z" }
+  ];
+</script>
+   
+
+<script>
+(function() {
+  const STORAGE_KEY = 'yh_registered_users';
+  let showPwdMap = {};
+
+  // ========== 数据层 ==========
+  function getRegisteredUsers() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    catch (e) { return []; }
+  }
+  function saveRegisteredUsers(users) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+  }
+  function getAllUsers() {
+    const registered = getRegisteredUsers();
+    const regNames = new Set(registered.map(function(u){ return u.username; }));
+    const builtin = BUILTIN_USERS.filter(function(u){ return !regNames.has(u.username); });
+    return builtin.concat(registered);
+  }
+  function isBuiltin(username) {
+    return BUILTIN_USERS.some(function(u){ return u.username === username; });
+  }
+  function addUser(username, password) {
+    const all = getAllUsers();
+    if (all.some(function(u){ return u.username === username; })) {
+      return { success: false, error: '用户名已存在' };
+    }
+    const registered = getRegisteredUsers();
+    registered.push({ username: username, password: password, regTime: new Date().toISOString() });
+    saveRegisteredUsers(registered);
+    return { success: true };
+  }
+  function verifyUser(username, password) {
+    const all = getAllUsers();
+    const user = all.find(function(u){ return u.username === username; });
+    if (!user) return { success: false, error: '用户不存在' };
+    if (user.password !== password) return { success: false, error: '密码错误' };
+    return { success: true, user: user };
+  }
+  function deleteUser(username) {
+    if (isBuiltin(username)) return { success: false, error: '内置用户不可删除' };
+    let registered = getRegisteredUsers();
+    registered = registered.filter(function(u){ return u.username !== username; });
+    saveRegisteredUsers(registered);
+    return { success: true };
+  }
+  function clearRegistered() {
+    saveRegisteredUsers([]);
+    return { success: true };
+  }
+
+  // ========== postMessage：响应 login.html ==========
+  window.addEventListener('message', function(e) {
+    const msg = e.data;
+    if (!msg || !msg.id || !msg.action) return;
+    let result;
+    switch (msg.action) {
+      case 'verify':
+        result = verifyUser(msg.data.username, msg.data.password);
+        break;
+      case 'add':
+        result = addUser(msg.data.username, msg.data.password);
+        break;
+      case 'getAll':
+        result = { success: true, data: getAllUsers() };
+        break;
+      case 'delete':
+        result = deleteUser(msg.data.username);
+        break;
+      case 'clear':
+        result = clearRegistered();
+        break;
+      default:
+        result = { success: false, error: '未知操作' };
+    }
+    e.source.postMessage({ id: msg.id, result: result }, '*');
+  });
+
+  // 通知父页面已就绪
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ action: 'yh-ready' }, '*');
+  }
+
+  // ========== 工具 ==========
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(function(){ t.classList.remove('show'); }, 2000);
+  }
+  function escapeHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str || '';
+    return d.innerHTML;
+  }
+  function formatTime(iso) {
+    if (!iso) return '-';
+    try {
+      const d = new Date(iso);
+      return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' +
+        String(d.getDate()).padStart(2,'0') + ' ' + String(d.getHours()).padStart(2,'0') +
+        ':' + String(d.getMinutes()).padStart(2,'0');
+    } catch (e) { return iso; }
+  }
+
+  // ========== 渲染 ==========
+  function render() {
+    const users = getAllUsers();
+    const tbody = document.getElementById('userTableBody');
+    const emptyState = document.getElementById('emptyState');
+    const table = document.getElementById('userTable');
+    document.getElementById('userCount').textContent = '共 ' + users.length + ' 位用户';
+    if (users.length === 0) {
+      table.style.display = 'none';
+      emptyState.style.display = 'block';
+      return;
+    }
+    table.style.display = '';
+    emptyState.style.display = 'none';
+    tbody.innerHTML = users.map(function(u) {
+      const initial = u.username.charAt(0).toUpperCase();
+      const builtin = isBuiltin(u.username);
+      const showPwd = showPwdMap[u.username];
+      const pwdDisplay = showPwd ? u.password : '••••••';
+      const delBtn = builtin
+        ? '<span style="font-size:12px;color:#ccc;">内置用户</span>'
+        : '<button class="btn btn-danger btn-sm" onclick="window._del(\'' + u.username.replace(/'/g,"\\'") + '\')">删除</button>';
+      return '<tr><td><div class="user-cell">' +
+        '<div class="user-avatar">' + initial + '</div>' +
+        '<span>' + escapeHtml(u.username) + '</span>' +
+        (builtin ? '<span class="badge-builtin">内置</span>' : '') +
+        '</div></td><td><span class="pwd-cell">' + escapeHtml(pwdDisplay) + '</span>' +
+        '<button class="pwd-toggle" onclick="window._pwd(\'' + u.username.replace(/'/g,"\\'") + '\')">' + (showPwd ? '隐藏' : '显示') + '</button></td>' +
+        '<td class="time-cell">' + formatTime(u.regTime) + '</td>' +
+        '<td>' + delBtn + '</td></tr>';
+    }).join('');
+  }
+
+  window._pwd = function(username) {
+    showPwdMap[username] = !showPwdMap[username];
+    render();
+  };
+  window._del = function(username) {
+    if (!confirm('确定删除用户「' + username + '」吗？')) return;
+    const r = deleteUser(username);
+    if (r.success) { delete showPwdMap[username]; render(); showToast('已删除'); }
+    else showToast(r.error);
+  };
+  window.clearAll = function() {
+    const cnt = getRegisteredUsers().length;
+    if (cnt === 0) { showToast('没有注册用户'); return; }
+    if (!confirm('确定清空全部 ' + cnt + ' 个注册用户吗？内置用户保留。')) return;
+    clearRegistered(); showPwdMap = {}; render(); showToast('已清空注册用户');
+  };
+
+  // ========== 导出 YH.txt ==========
+  window.exportTXT = function() {
+    const users = getAllUsers();
+    if (users.length === 0) { showToast('暂无用户数据'); return; }
+    const lines = ['用户名\t密码\t注册时间'];
+    users.forEach(function(u) { lines.push(u.username + '\t' + u.password + '\t' + (u.regTime || '')); });
+    const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/plain;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'YH.txt';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+    showToast('已导出 YH.txt');
+  };
+
+  // ========== 导入 YH.txt ==========
+  window.importTXT = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const content = e.target.result.replace(/^\uFEFF/, '');
+      const lines = content.split('\n').filter(function(l){ return l.trim(); });
+      if (lines.length === 0) { showToast('文件为空'); event.target.value = ''; return; }
+      const startIdx = lines[0].indexOf('用户名') >= 0 ? 1 : 0;
+      let added = 0;
+      for (let i = startIdx; i < lines.length; i++) {
+        const parts = lines[i].split(/[\t,|]/).map(function(s){ return s.trim(); });
+        if (parts.length >= 2 && parts[0]) {
+          if (addUser(parts[0], parts[1] || '').success) added++;
+        }
+      }
+      render();
+      showToast('导入完成，新增 ' + added + ' 个用户（跳过重复）');
+      event.target.value = '';
+    };
+    reader.readAsText(file, 'UTF-8');
+  };
+
+  // ========== 导出 YH.html（把所有用户写进新的 HTML 文件） ==========
+  window.exportYHHTML = function() {
+    const users = getAllUsers();
+    if (users.length === 0) { showToast('暂无用户数据'); return; }
+    const usersJS = users.map(function(u) {
+      return '    { username: ' + JSON.stringify(u.username) +
+             ', password: ' + JSON.stringify(u.password) +
+             ', regTime: ' + JSON.stringify(u.regTime || '') + ' }';
+    }).join(',\n');
+    const originalHTML = document.documentElement.outerHTML;
+    const newHTML = originalHTML.replace(
+      /const BUILTIN_USERS = \[[\s\S]*?\];/,
+      'const BUILTIN_USERS = [\n' + usersJS + '\n  ];'
+    );
+    const blob = new Blob([newHTML], { type: 'text/html;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'YH.html';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+    showToast('已导出 YH.html，覆盖原文件后用户即永久写入');
+  };
+
+  window.goBack = function() { window.location.href = 'index.html'; };
+
+  render();
+})();
+</script>
+
+</body>
+</html>
