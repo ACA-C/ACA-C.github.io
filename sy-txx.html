@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数据存储 · txx</title>
+<style>
+  :root{
+    --bg:#f4f5f7; --panel:#fff; --text:#1f2937; --muted:#6b7280; --line:#e8eaed;
+    --blue:#3b82f6; --red:#ef4444;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  }
+  .app{max-width:900px;margin:0 auto;padding:24px 16px 64px;}
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px;}
+  .topbar h1{font-size:20px;margin:0;}
+  .topbar a{font-size:13px;color:var(--blue);text-decoration:none;}
+  .topbar a:hover{text-decoration:underline;}
+
+  .panel{
+    background:var(--panel);border-radius:16px;padding:18px;margin-bottom:16px;
+    box-shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.1);
+  }
+  .panel h2{font-size:15px;margin:0 0 14px;}
+  .tip{font-size:12.5px;color:var(--muted);line-height:1.7;margin:0 0 12px;}
+  .tip code{background:#f1f5f9;border-radius:4px;padding:1px 5px;font-size:12px;}
+
+  textarea{
+    width:100%;min-height:260px;border:1px solid var(--line);border-radius:12px;
+    padding:12px;font-size:13px;line-height:1.6;font-family:ui-monospace,Menlo,Consolas,monospace;
+    background:#fcfcfd;color:inherit;outline:none;resize:vertical;
+  }
+  textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.15);}
+
+  .btn-group{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
+  .btn{
+    border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 18px;
+    font-size:14px;cursor:pointer;color:var(--text);transition:.15s;font-family:inherit;
+  }
+  .btn:hover{background:#f3f4f6;}
+  .btn.primary{background:#111827;border-color:#111827;color:#fff;}
+  .btn.primary:hover{background:#1f2937;}
+  .btn.danger{color:var(--red);border-color:#fecaca;background:#fef2f2;}
+  .btn.danger:hover{background:#fee2e2;}
+
+  .status{font-size:12.5px;color:var(--muted);margin-left:4px;align-self:center;}
+  .status.ok{color:#16a34a;}
+  .status.err{color:var(--red);}
+
+  .count-line{font-size:13px;color:var(--muted);margin-bottom:10px;}
+  .count-line b{color:var(--text);}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <h1>🗄️ 数据存储（txx）</h1>
+    <a href="index.html">← 返回统计页 index.html</a>
+  </div>
+
+  <section class="panel">
+    <h2>数据说明</h2>
+    <p class="tip">
+      本页与 <code>index.html</code> 共用同一个 localStorage 键：<code>txx_records_v1</code>。<br>
+      index 负责增删改查与统计，txx 负责存储与查看原始数据，两边改动会自动同步。<br>
+      每条记录格式：<code>{ id, date, meal, place, price }</code>，其中 <code>price</code> 以数字类型保存。<br>
+      <code>meal</code> 取值：<code>morning / noon / evening</code>；
+      <code>place</code> 取值：<code>in / out</code>。
+    </p>
+  </section>
+
+  <section class="panel">
+    <h2>原始数据（可直接编辑）</h2>
+    <div class="count-line">当前共 <b id="count">0</b> 条记录</div>
+    <textarea id="dataArea" spellcheck="false" placeholder="[]"></textarea>
+    <div class="btn-group">
+      <button class="btn primary" id="saveBtn">保存到 localStorage</button>
+      <button class="btn" id="loadBtn">重新读取</button>
+      <button class="btn" id="formatBtn">格式化 JSON</button>
+      <button class="btn" id="exportBtn">导出为文件</button>
+      <button class="btn danger" id="clearBtn">清空全部数据</button>
+      <span class="status" id="status"></span>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>导入数据</h2>
+    <p class="tip">选择之前导出的 JSON 文件，或直接粘贴到上面的文本框再点保存。</p>
+    <div class="btn-group">
+      <input type="file" id="fileInput" accept=".json,application/json" style="display:none">
+      <button class="btn" id="importBtn">选择 JSON 文件导入</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  const STORAGE_KEY = 'txx_records_v1';
+
+  const dataArea = document.getElementById('dataArea');
+  const statusEl = document.getElementById('status');
+  const countEl  = document.getElementById('count');
+  const fileInput = document.getElementById('fileInput');
+
+  /* ---------- 状态提示 ---------- */
+  let statusTimer = null;
+  function setStatus(msg, type) {
+    statusEl.textContent = msg || '';
+    statusEl.className = 'status' + (type ? ' ' + type : '');
+    if (statusTimer) clearTimeout(statusTimer);
+    if (msg) {
+      statusTimer = setTimeout(function () {
+        statusEl.textContent = '';
+        statusEl.className = 'status';
+      }, 2500);
+    }
+  }
+
+  /* ---------- 读取 ---------- */
+  function readRaw() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (err) {
+      return [];
+    }
+  }
+
+  function normalize(list) {
+    if (!Array.isArray(list)) return [];
+    return list.map(function (r) {
+      return {
+        id:    r.id || ('r' + Math.random().toString(36).slice(2, 9)),
+        date:  String(r.date || '').slice(0, 10),
+        meal:  ['morning', 'noon', 'evening'].indexOf(r.meal) > -1 ? r.meal : 'morning',
+        place: ['in', 'out'].indexOf(r.place) > -1 ? r.place : 'in',
+        price: Number(r.price) || 0
+      };
+    });
+  }
+
+  /* ---------- 渲染 ---------- */
+  function render() {
+    const list = readRaw();
+    dataArea.value = JSON.stringify(list, null, 2);
+    countEl.textContent = list.length;
+  }
+
+  /* ---------- 保存 ---------- */
+  function save() {
+    let parsed;
+    try {
+      parsed = JSON.parse(dataArea.value || '[]');
+    } catch (err) {
+      setStatus('JSON 格式错误，无法保存', 'err');
+      return;
+    }
+    if (!Array.isArray(parsed)) {
+      setStatus('数据必须是数组（[]）', 'err');
+      return;
+    }
+    const clean = normalize(parsed);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(clean));
+    } catch (err) {
+      setStatus('保存失败：' + err.message, 'err');
+      return;
+    }
+    dataArea.value = JSON.stringify(clean, null, 2);
+    countEl.textContent = clean.length;
+    setStatus('已保存 ' + clean.length + ' 条记录', 'ok');
+  }
+
+  /* ---------- 导出 ---------- */
+  function exportFile() {
+    const list = readRaw();
+    const blob = new Blob([JSON.stringify(list, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const d = new Date();
+    const pad = function (n) { return String(n).padStart(2, '0'); };
+    a.href = url;
+    a.download = 'txx_records_' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setStatus('已导出 ' + list.length + ' 条记录', 'ok');
+  }
+
+  /* ---------- 导入 ---------- */
+  function importFile(file) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      let parsed;
+      try {
+        parsed = JSON.parse(e.target.result);
+      } catch (err) {
+        setStatus('文件不是有效的 JSON', 'err');
+        return;
+      }
+      if (!Array.isArray(parsed)) {
+        setStatus('文件内容必须是数组', 'err');
+        return;
+      }
+      const clean = normalize(parsed);
+      dataArea.value = JSON.stringify(clean, null, 2);
+      countEl.textContent = clean.length;
+      setStatus('已读入 ' + clean.length + ' 条，点“保存”写入', 'ok');
+    };
+    reader.readAsText(file, 'utf-8');
+  }
+
+  /* ---------- 事件 ---------- */
+  document.getElementById('saveBtn').addEventListener('click', save);
+  document.getElementById('loadBtn').addEventListener('click', function () {
+    render();
+    setStatus('已重新读取', 'ok');
+  });
+  document.getElementById('formatBtn').addEventListener('click', function () {
+    try {
+      const parsed = JSON.parse(dataArea.value || '[]');
+      dataArea.value = JSON.stringify(parsed, null, 2);
+      setStatus('已格式化', 'ok');
+    } catch (err) {
+      setStatus('JSON 格式错误，无法格式化', 'err');
+    }
+  });
+  document.getElementById('exportBtn').addEventListener('click', exportFile);
+  document.getElementById('clearBtn').addEventListener('click', function () {
+    if (!confirm('确定清空全部记录吗？此操作不可撤销。')) return;
+    localStorage.removeItem(STORAGE_KEY);
+    dataArea.value = '[]';
+    countEl.textContent = '0';
+    setStatus('已清空全部数据', 'ok');
+  });
+  document.getElementById('importBtn').addEventListener('click', function () {
+    fileInput.click();
+  });
+  fileInput.addEventListener('change', function () {
+    if (fileInput.files && fileInput.files[0]) {
+      importFile(fileInput.files[0]);
+      fileInput.value = '';
+    }
+  });
+
+  // 其它页面（index.html）改动数据时自动刷新
+  window.addEventListener('storage', function (e) {
+    if (e.key === STORAGE_KEY) render();
+  });
+
+  /* ---------- 初始化 ---------- */
+  render();
+})();
+</script>
+</body>
+</html>

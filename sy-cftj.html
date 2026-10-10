@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>消费记录 · index</title>
+<style>
+  :root{
+    --bg:#f4f5f7; --panel:#fff; --text:#1f2937; --muted:#6b7280; --line:#e8eaed;
+    --green:#22c55e; --orange:#f97316; --red:#ef4444; --yellow:#eab308; --blue:#3b82f6;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{max-width:980px;margin:0 auto;padding:24px 16px 64px;}
+
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px;}
+  .topbar h1{font-size:20px;margin:0;}
+  .topbar a{font-size:13px;color:var(--blue);text-decoration:none;}
+  .topbar a:hover{text-decoration:underline;}
+
+  .panel{
+    background:var(--panel);border-radius:16px;padding:18px;margin-bottom:16px;
+    box-shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.1);
+  }
+  .panel h2{font-size:15px;margin:0 0 14px;}
+  .panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
+  .panel-head h2{margin:0;}
+
+  /* ---------- 表单 ---------- */
+  .grid-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;}
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field label{font-size:12px;color:var(--muted);}
+  input[type=date],input[type=number],select{
+    border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-size:14px;
+    background:#fff;color:inherit;outline:none;width:100%;font-family:inherit;
+  }
+  input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.15);}
+  .btn-group{display:flex;gap:8px;}
+  .opt{
+    flex:1;border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 0;
+    font-size:14px;cursor:pointer;color:var(--muted);transition:.15s;font-family:inherit;
+  }
+  .opt:hover{border-color:#cbd5e1;}
+  #mealGroup .opt[data-value=morning].active{background:var(--green);border-color:var(--green);color:#fff;}
+  #mealGroup .opt[data-value=noon].active{background:var(--orange);border-color:var(--orange);color:#fff;}
+  #mealGroup .opt[data-value=evening].active{background:var(--red);border-color:var(--red);color:#fff;}
+  #placeGroup .opt[data-value=in].active{background:var(--yellow);border-color:var(--yellow);color:#3d2e00;}
+  #placeGroup .opt[data-value=out].active{background:var(--blue);border-color:var(--blue);color:#fff;}
+
+  .form-actions{display:flex;gap:10px;margin-top:16px;}
+  .btn{
+    border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 20px;
+    font-size:14px;cursor:pointer;color:var(--text);transition:.15s;font-family:inherit;
+  }
+  .btn:hover{background:#f3f4f6;}
+  .btn.primary{background:#111827;border-color:#111827;color:#fff;}
+  .btn.primary:hover{background:#1f2937;}
+
+  /* ---------- 统计 ---------- */
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;}
+  .stat{--c:#cbd5e1;position:relative;background:#f9fafb;border-radius:12px;padding:12px 14px 12px 18px;overflow:hidden;}
+  .stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c);}
+  .stat .label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;}
+  .stat .value{font-size:18px;font-weight:700;letter-spacing:-.3px;}
+  .stat.total{background:#111827;}
+  .stat.total .label{color:#9ca3af;}
+  .stat.total .value{color:#fff;}
+  .stat.total::before{background:#111827;}
+
+  .month-table{width:100%;border-collapse:collapse;margin-top:18px;font-size:13px;}
+  .month-table th,.month-table td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap;}
+  .month-table th:first-child,.month-table td:first-child{text-align:left;}
+  .month-table th{color:var(--muted);font-weight:500;background:#fafafa;}
+  .month-table tbody tr:hover td{background:#fafbfc;}
+
+  /* ---------- 卡片列表 ---------- */
+  .badge{
+    display:inline-block;background:#eef2f7;color:#475569;border-radius:999px;
+    font-size:12px;padding:1px 9px;margin-left:6px;vertical-align:middle;font-weight:500;
+  }
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;}
+  .card{
+    --accent:#cbd5e1;background:#f9fafb;border:1px solid var(--line);border-radius:14px;
+    padding:14px;border-top:4px solid var(--accent);display:flex;flex-direction:column;gap:10px;
+  }
+  .card-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;}
+  .card-date{font-size:13px;color:var(--muted);}
+  .card-price{font-size:16px;font-weight:700;}
+  .card-tags{display:flex;gap:6px;flex-wrap:wrap;}
+  .tag{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;line-height:18px;}
+  .card-actions{display:flex;gap:8px;margin-top:2px;}
+  .card-actions button{
+    flex:1;border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 0;
+    font-size:12.5px;cursor:pointer;color:var(--muted);font-family:inherit;transition:.15s;
+  }
+  .card-actions button:hover{background:#fff;color:var(--text);border-color:#cbd5e1;}
+  .card-actions button[data-act=del]:hover{color:var(--red);border-color:#fecaca;background:#fef2f2;}
+  .empty{color:var(--muted);font-size:14px;text-align:center;padding:24px 0;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <h1>消费记录统计</h1>
+    <a href="zzzz.html">返回→</a>
+  </div>
+
+  <!-- ========== 添加 / 编辑 ========== -->
+  <section class="panel">
+    <h2 id="formTitle">添加记录</h2>
+    <div class="grid-form">
+      <div class="field">
+        <label for="dateInput">日期</label>
+        <input type="date" id="dateInput">
+      </div>
+      <div class="field">
+        <label>餐次</label>
+        <div class="btn-group" id="mealGroup">
+          <button type="button" class="opt" data-value="morning">早上</button>
+          <button type="button" class="opt" data-value="noon">中午</button>
+          <button type="button" class="opt" data-value="evening">晚上</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>地点</label>
+        <div class="btn-group" id="placeGroup">
+          <button type="button" class="opt" data-value="in">校内</button>
+          <button type="button" class="opt" data-value="out">校外</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="priceInput">价格（元）</label>
+        <input type="number" id="priceInput" min="0" step="0.01" placeholder="例如 12.5">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" id="submitBtn">添加</button>
+      <button class="btn" id="cancelBtn" style="display:none">取消编辑</button>
+    </div>
+  </section>
+
+  <!-- ========== 统计 ========== -->
+  <section class="panel">
+    <div class="panel-head">
+      <h2>月度统计</h2>
+      <select id="monthSelect" style="width:auto;min-width:130px;"></select>
+    </div>
+    <div class="stat-grid" id="statGrid"></div>
+    <table class="month-table" id="monthTable"></table>
+  </section>
+
+  <!-- ========== 卡片列表 ========== -->
+  <section class="panel">
+    <div class="panel-head">
+      <h2>全部记录<span class="badge" id="countBadge">0</span></h2>
+    </div>
+    <div class="cards" id="list"></div>
+    <div class="empty" id="emptyTip">还没有记录，先在上面添加一条吧 ~</div>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* =========================================================
+     与 txx.html 共用同一个 localStorage 键，txx.html 负责存储
+     ========================================================= */
+  const STORAGE_KEY = 'txx_records_v1';
+
+  const MEALS = {
+    morning: { label: '早上', bg: '#22c55e', fg: '#ffffff' },
+    noon:    { label: '中午', bg: '#f97316', fg: '#ffffff' },
+    evening: { label: '晚上', bg: '#ef4444', fg: '#ffffff' }
+  };
+  const PLACES = {
+    in:  { label: '校内', bg: '#eab308', fg: '#3d2e00' },
+    out: { label: '校外', bg: '#3b82f6', fg: '#ffffff' }
+  };
+
+  /* ---------------- DOM ---------------- */
+  const $ = (s) => document.querySelector(s);
+  const dateInput   = $('#dateInput');
+  const priceInput  = $('#priceInput');
+  const mealGroup   = $('#mealGroup');
+  const placeGroup  = $('#placeGroup');
+  const formTitle   = $('#formTitle');
+  const submitBtn   = $('#submitBtn');
+  const cancelBtn   = $('#cancelBtn');
+  const monthSelect = $('#monthSelect');
+  const statGrid    = $('#statGrid');
+  const monthTable  = $('#monthTable');
+  const listEl      = $('#list');
+  const emptyTip    = $('#emptyTip');
+  const countBadge  = $('#countBadge');
+
+  /* ---------------- 状态 ---------------- */
+  let records   = [];
+  let editingId = null;
+  let formMeal  = 'morning';
+  let formPlace = 'in';
+
+  /* ---------------- 工具 ---------------- */
+  const pad = (n) => String(n).padStart(2, '0');
+  function todayStr() {
+    const d = new Date();
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
+  function money(n) { return (Number(n) || 0).toFixed(2); }
+  function fmtMonth(m) { const p = m.split('-'); return p[0] + '年' + Number(p[1]) + '月'; }
+  function uid() { return 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+  /* ---------------- 读取 / 保存（数据源就是 txx.html 写入的那份数据） ---------------- */
+  function loadRecords() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      const data = JSON.parse(raw);
+      if (!Array.isArray(data)) return [];
+      // 保证 price 一定是数字类型（整数 / 浮点数）
+      return data.map(r => Object.assign({}, r, { price: Number(r.price) || 0 }));
+    } catch (err) {
+      console.error('读取数据失败：', err);
+      return [];
+    }
+  }
+  function saveRecords(list) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    } catch (err) {
+      alert('保存失败：' + err.message);
+    }
+  }
+
+  /* ---------------- 表单交互 ---------------- */
+  function setMeal(v) {
+    if (!MEALS[v]) return;
+    formMeal = v;
+    Array.prototype.forEach.call(mealGroup.children, b =>
+      b.classList.toggle('active', b.dataset.value === v));
+  }
+  function setPlace(v) {
+    if (!PLACES[v]) return;
+    formPlace = v;
+    Array.prototype.forEach.call(placeGroup.children, b =>
+      b.classList.toggle('active', b.dataset.value === v));
+  }
+  function resetForm() {
+    editingId = null;
+    dateInput.value = todayStr();
+    priceInput.value = '';
+    setMeal('morning');
+    setPlace('in');
+    formTitle.textContent = '添加记录';
+    submitBtn.textContent = '添加';
+    cancelBtn.style.display = 'none';
+  }
+
+  /* ---------------- 增 / 改 ---------------- */
+  function handleSubmit() {
+    const date = dateInput.value;
+    if (!date) { alert('请选择日期'); dateInput.focus(); return; }
+
+    const raw = priceInput.value.trim();
+    if (raw === '') { alert('请输入价格'); priceInput.focus(); return; }
+
+    const price = Number(raw);
+    if (!isFinite(price) || price < 0) {
+      alert('请输入有效的价格（大于等于 0 的数字）');
+      priceInput.focus();
+      return;
+    }
+    const rounded = Math.round(price * 100) / 100;   // 以数字类型保存
+
+    if (editingId) {
+      const idx = records.findIndex(r => r.id === editingId);
+      if (idx > -1) {
+        records[idx] = Object.assign({}, records[idx], {
+          date: date,
+          meal: formMeal,
+          place: formPlace,
+          price: rounded
+        });
+      }
+    } else {
+      records.push({
+        id: uid(),
+        date: date,
+        meal: formMeal,
+        place: formPlace,
+        price: rounded
+      });
+    }
+
+    saveRecords(records);
+    resetForm();
+    refreshAll();
+  }
+
+  function startEdit(id) {
+    const r = records.find(x => x.id === id);
+    if (!r) return;
+    editingId = id;
+    dateInput.value = r.date || todayStr();
+    priceInput.value = r.price;
+    setMeal(r.meal);
+    setPlace(r.place);
+    formTitle.textContent = '编辑记录';
+    submitBtn.textContent = '保存修改';
+    cancelBtn.style.display = 'inline-block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function removeRecord(id) {
+    if (!confirm('确定删除这条记录吗？')) return;
+    records = records.filter(r => r.id !== id);
+    saveRecords(records);
+    if (editingId === id) resetForm();
+    refreshAll();
+  }
+
+  /* ---------------- 渲染：统计 ---------------- */
+  function renderStats() {
+    // 收集所有出现过的月份
+    const monthSet = new Set(
+      records
+        .map(r => String(r.date || '').slice(0, 7))
+        .filter(m => /^\d{4}-\d{2}$/.test(m))
+    );
+    const thisMonth = todayStr().slice(0, 7);
+    monthSet.add(thisMonth);
+    const months = Array.from(monthSet).sort().reverse();
+
+    const prev = monthSelect.value;
+    monthSelect.innerHTML = months
+      .map(m => '<option value="' + m + '">' + fmtMonth(m) + '</option>')
+      .join('');
+    const selected = months.indexOf(prev) > -1 ? prev : thisMonth;
+    monthSelect.value = selected;
+
+    const list = records.filter(r => String(r.date || '').slice(0, 7) === selected);
+    const sumBy = (fn) => list.filter(fn).reduce((a, r) => a + (Number(r.price) || 0), 0);
+
+    const morning = sumBy(r => r.meal === 'morning');
+    const noon    = sumBy(r => r.meal === 'noon');
+    const evening = sumBy(r => r.meal === 'evening');
+    const inSum   = sumBy(r => r.place === 'in');
+    const outSum  = sumBy(r => r.place === 'out');
+    const total   = morning + noon + evening;
+
+    statGrid.innerHTML =
+      '<div class="stat" style="--c:var(--green)"><span class="label">早上</span><span class="value">¥' + money(morning) + '</span></div>' +
+      '<div class="stat" style="--c:var(--orange)"><span class="label">中午</span><span class="value">¥' + money(noon) + '</span></div>' +
+      '<div class="stat" style="--c:var(--red)"><span class="label">晚上</span><span class="value">¥' + money(evening) + '</span></div>' +
+      '<div class="stat" style="--c:var(--yellow)"><span class="label">校内</span><span class="value">¥' + money(inSum) + '</span></div>' +
+      '<div class="stat" style="--c:var(--blue)"><span class="label">校外</span><span class="value">¥' + money(outSum) + '</span></div>' +
+      '<div class="stat total"><span class="label">本月总计（' + list.length + ' 笔）</span><span class="value">¥' + money(total) + '</span></div>';
+
+    renderMonthTable();
+  }
+
+  function renderMonthTable() {
+    const map = new Map();
+    records.forEach(r => {
+      const m = String(r.date || '').slice(0, 7);
+      if (!/^\d{4}-\d{2}$/.test(m)) return;
+      if (!map.has(m)) map.set(m, { morning: 0, noon: 0, evening: 0, in: 0, out: 0, total: 0, count: 0 });
+      const o = map.get(m);
+      const p = Number(r.price) || 0;
+      if (o[r.meal] !== undefined) o[r.meal] += p;
+      if (r.place === 'in') o.in += p;
+      else if (r.place === 'out') o.out += p;
+      o.total += p;
+      o.count++;
+    });
+
+    const rows = Array.from(map.entries()).sort((a, b) => b[0].localeCompare(a[0]));
+
+    let html = '<thead><tr>' +
+      '<th>月份</th><th>早上</th><th>中午</th><th>晚上</th>' +
+      '<th>校内</th><th>校外</th><th>总计</th></tr></thead><tbody>';
+
+    if (rows.length === 0) {
+      html += '<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:18px;">暂无数据</td></tr>';
+    } else {
+      rows.forEach(([m, o]) => {
+        html += '<tr>' +
+          '<td>' + fmtMonth(m) + '</td>' +
+          '<td>¥' + money(o.morning) + '</td>' +
+          '<td>¥' + money(o.noon) + '</td>' +
+          '<td>¥' + money(o.evening) + '</td>' +
+          '<td>¥' + money(o.in) + '</td>' +
+          '<td>¥' + money(o.out) + '</td>' +
+          '<td><b>¥' + money(o.total) + '</b></td>' +
+          '</tr>';
+      });
+    }
+    html += '</tbody>';
+    monthTable.innerHTML = html;
+  }
+
+  /* ---------------- 渲染：卡片列表 ---------------- */
+  function renderList() {
+    // 日期倒序，同一天新添加的排前面
+    const sorted = records
+      .map((r, i) => ({ r: r, i: i }))
+      .sort((a, b) => {
+        const d = String(b.r.date || '').localeCompare(String(a.r.date || ''));
+        return d !== 0 ? d : b.i - a.i;
+      })
+      .map(x => x.r);
+
+    countBadge.textContent = records.length;
+    emptyTip.style.display = sorted.length ? 'none' : 'block';
+
+    listEl.innerHTML = sorted.map(r => {
+      const meal  = MEALS[r.meal]   || { label: r.meal || '—',  bg: '#9ca3af', fg: '#fff' };
+      const place = PLACES[r.place] || { label: r.place || '—', bg: '#9ca3af', fg: '#fff' };
+      return '<article class="card" style="--accent:' + meal.bg + '">' +
+        '<div class="card-head">' +
+          '<span class="card-date">' + (r.date || '—') + '</span>' +
+          '<span class="card-price">¥' + money(r.price) + '</span>' +
+        '</div>' +
+        '<div class="card-tags">' +
+          '<span class="tag" style="background:' + meal.bg + ';color:' + meal.fg + '">' + meal.label + '</span>' +
+          '<span class="tag" style="background:' + place.bg + ';color:' + place.fg + '">' + place.label + '</span>' +
+        '</div>' +
+        '<div class="card-actions">' +
+          '<button data-act="edit" data-id="' + r.id + '">编辑</button>' +
+          '<button data-act="del" data-id="' + r.id + '">删除</button>' +
+        '</div>' +
+      '</article>';
+    }).join('');
+  }
+
+  function refreshAll() {
+    renderStats();
+    renderList();
+  }
+
+  /* ---------------- 事件绑定 ---------------- */
+  mealGroup.addEventListener('click', function (e) {
+    const btn = e.target.closest('button[data-value]');
+    if (btn) setMeal(btn.dataset.value);
+  });
+  placeGroup.addEventListener('click', function (e) {
+    const btn = e.target.closest('button[data-value]');
+    if (btn) setPlace(btn.dataset.value);
+  });
+
+  submitBtn.addEventListener('click', handleSubmit);
+  cancelBtn.addEventListener('click', resetForm);
+  priceInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') handleSubmit();
+  });
+  monthSelect.addEventListener('change', renderStats);
+
+  listEl.addEventListener('click', function (e) {
+    const btn = e.target.closest('button[data-act]');
+    if (!btn) return;
+    if (btn.dataset.act === 'edit') startEdit(btn.dataset.id);
+    else if (btn.dataset.act === 'del') removeRecord(btn.dataset.id);
+  });
+
+  // 其它页面（如 txx.html）修改了数据时自动同步
+  window.addEventListener('storage', function (e) {
+    if (e.key === STORAGE_KEY) {
+      records = loadRecords();
+      refreshAll();
+    }
+  });
+
+  /* ---------------- 初始化 ---------------- */
+  resetForm();
+  records = loadRecords();
+  refreshAll();
+})();
+</script>
+</body>
+</html>
